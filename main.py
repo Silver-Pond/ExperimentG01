@@ -69,31 +69,70 @@ mapA = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ]
 
-grassSurface = pygame.image.load("grass.png")
-grassData = pygame.image.tostring(grassSurface, "RGBA", True)
+# ----------------------------
+# Boxes
+# ----------------------------
+boxes = [
+    {"x": 4.5, "y": 3.5, "size": 1.0, "height": 1.0}
+]
 
-grassTexture = glGenTextures(1)
+# --------------------
+# Textures
+# --------------------
+def load_texture(filename):
 
-glBindTexture(GL_TEXTURE_2D, grassTexture)
+    surface = pygame.image.load(filename).convert_alpha()
 
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    data = pygame.image.tostring(surface, "RGBA", True)
 
-glTexImage2D(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    grassSurface.get_width(),
-    grassSurface.get_height(),
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    grassData
-)
+    texture = glGenTextures(1)
 
-glEnable(GL_TEXTURE_2D)
-glEnable(GL_DEPTH_TEST)
+    glBindTexture(GL_TEXTURE_2D, texture)
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        surface.get_width(),
+        surface.get_height(),
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        data
+    )
+
+    return texture
+
+grassTexture = load_texture("grass.png")
+boxTexture = load_texture("box.png")
+
+# ----------------------------
+# Draw Map
+# ----------------------------
+def draw_map():
+
+    for x in range(len(mapA)):
+        for y in range(len(mapA[x])):
+
+            if mapA[x][y] == 1:
+
+                glPushMatrix()
+
+                glTranslatef(x + 0.5, y + 0.5, 0.5)
+
+                draw_textured_cube(1, grassTexture)
+
+                glPopMatrix()
+
+# ----------------------------
+# Draw Floor
+# ----------------------------
 def draw_floor():
 
     glEnable(GL_TEXTURE_2D)
@@ -122,49 +161,81 @@ def draw_floor():
 
     glDisable(GL_TEXTURE_2D)
 
-def draw_cube(size):
+# ----------------------------
+# Draw Boxes
+# ----------------------------
+def draw_boxes():
+
+    for box in boxes:
+
+        glPushMatrix()
+
+        glTranslatef(
+            box["x"],
+            box["y"],
+            box["height"] / 2
+        )
+
+        draw_textured_cube(
+            box["size"],
+            boxTexture
+        )
+
+        glPopMatrix()
+
+# ----------------------------
+# Draw Cubes
+# ----------------------------
+def draw_textured_cube(size, texture):
 
     s = size / 2
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture)
+
+    glColor3f(1,1,1)
 
     glBegin(GL_QUADS)
 
     # Front
-    glVertex3f(-s,-s, s)
-    glVertex3f( s,-s, s)
-    glVertex3f( s, s, s)
-    glVertex3f(-s, s, s)
+    glTexCoord2f(0,0); glVertex3f(-s,-s, s)
+    glTexCoord2f(1,0); glVertex3f( s,-s, s)
+    glTexCoord2f(1,1); glVertex3f( s, s, s)
+    glTexCoord2f(0,1); glVertex3f(-s, s, s)
 
     # Back
-    glVertex3f(-s,-s,-s)
-    glVertex3f(-s, s,-s)
-    glVertex3f( s, s,-s)
-    glVertex3f( s,-s,-s)
+    glTexCoord2f(0,0); glVertex3f( s,-s,-s)
+    glTexCoord2f(1,0); glVertex3f(-s,-s,-s)
+    glTexCoord2f(1,1); glVertex3f(-s, s,-s)
+    glTexCoord2f(0,1); glVertex3f( s, s,-s)
 
     # Left
-    glVertex3f(-s,-s,-s)
-    glVertex3f(-s,-s, s)
-    glVertex3f(-s, s, s)
-    glVertex3f(-s, s,-s)
+    glTexCoord2f(0,0); glVertex3f(-s,-s,-s)
+    glTexCoord2f(1,0); glVertex3f(-s,-s, s)
+    glTexCoord2f(1,1); glVertex3f(-s, s, s)
+    glTexCoord2f(0,1); glVertex3f(-s, s,-s)
 
     # Right
-    glVertex3f( s,-s,-s)
-    glVertex3f( s, s,-s)
-    glVertex3f( s, s, s)
-    glVertex3f( s,-s, s)
+    glTexCoord2f(0,0); glVertex3f( s,-s, s)
+    glTexCoord2f(1,0); glVertex3f( s,-s,-s)
+    glTexCoord2f(1,1); glVertex3f( s, s,-s)
+    glTexCoord2f(0,1); glVertex3f( s, s, s)
 
     # Top
-    glVertex3f(-s, s,-s)
-    glVertex3f(-s, s, s)
-    glVertex3f( s, s, s)
-    glVertex3f( s, s,-s)
+    glTexCoord2f(0,0); glVertex3f(-s, s, s)
+    glTexCoord2f(1,0); glVertex3f( s, s, s)
+    glTexCoord2f(1,1); glVertex3f( s, s,-s)
+    glTexCoord2f(0,1); glVertex3f(-s, s,-s)
 
     # Bottom
-    glVertex3f(-s,-s,-s)
-    glVertex3f( s,-s,-s)
-    glVertex3f( s,-s, s)
-    glVertex3f(-s,-s, s)
+    glTexCoord2f(0,0); glVertex3f(-s,-s,-s)
+    glTexCoord2f(1,0); glVertex3f( s,-s,-s)
+    glTexCoord2f(1,1); glVertex3f( s,-s, s)
+    glTexCoord2f(0,1); glVertex3f(-s,-s, s)
 
     glEnd()
+
+    glDisable(GL_TEXTURE_2D)
 
 # Mouse settings
 pygame.mouse.set_visible(False)
@@ -172,20 +243,30 @@ pygame.event.set_grab(True)
 
 mouseSensitivity = 0.003
 
-# Jump settings
-playerX = 3
+# Position settings
+playerX = 5
 playerY = 7.5
 playerZ = 0.3
 
 # cam and player rotation
 cameraRot = 0.0
 playerRot = 0.0
+cameraDistance = 4.0
+cameraHeight = 1.0
 
+# Game variables
 verticalVelocity = 0.0
 gravity = -0.015
 jumpStrength = 0.25
-groundHeight = 0.3
+playerRadius = 0.25
 
+# Heights
+groundHeight = 0.3
+stepHeight = 0.45
+
+# ----------------------------
+# Draw Player
+# ----------------------------
 def draw_player():
 
     glPushMatrix()
@@ -194,12 +275,68 @@ def draw_player():
 
     glColor3f(1, 0, 0)
 
-    draw_cube(0.4)
+    draw_textured_cube(0.5, 0)
 
     glPopMatrix()
 
-cameraDistance = 4.0
-cameraHeight = 1.0
+# ----------------------------
+# Movement Helper Method
+# ----------------------------
+def can_move(x, y):
+
+    checks = [
+        (x-playerRadius, y),
+        (x+playerRadius, y),
+        (x, y-playerRadius),
+        (x, y+playerRadius)
+    ]
+
+    for cx, cy in checks:
+
+        if mapA[int(cx)][int(cy)] == 1:
+            return False
+
+    return True
+
+# ----------------------------
+# Jump Helper Method
+# ----------------------------
+def get_floor_height(x, y):
+
+    floor = groundHeight
+
+    for box in boxes:
+
+        if (
+            abs(x - box["x"]) < box["size"] - playerRadius and
+            abs(y - box["y"]) < box["size"] - playerRadius
+        ):
+            floor = max(floor, box["height"] + playerRadius)
+
+    return floor
+
+# ----------------------------
+# Box Helper Method
+# ----------------------------
+def collides_with_box(x, y, z):
+
+    for box in boxes:
+
+        half = box["size"] / 2
+
+        # Inside the box footprint?
+        if (
+            abs(x - box["x"]) < half + playerRadius and
+            abs(y - box["y"]) < half + playerRadius
+        ):
+
+            # Only collide with the sides if below the top
+            if z < box["height"] - 0.02:
+                return True
+
+    return False
+
+# ----------------------------
 
 glEnable(GL_DEPTH_TEST)
 
@@ -224,7 +361,7 @@ while running:
     # -------------------------
     mouseX, mouseY = pygame.mouse.get_rel()
 
-    cameraRot += mouseX * mouseSensitivity
+    cameraRot -= mouseX * mouseSensitivity
 
     # Make the player always face the camera direction
     playerRot = cameraRot
@@ -239,39 +376,48 @@ while running:
     # -------------------------
     # Keyboard movement
     # -------------------------
-    forwardX = np.cos(cameraRot)
-    forwardY = np.sin(cameraRot)
-
-    rightX = -np.sin(cameraRot)
-    rightY = np.cos(cameraRot)
+    newX = playerX
+    newY = playerY
 
     if keys[pygame.K_w]:
-        playerX += forwardX * speed
-        playerY += forwardY * speed
+        newX += np.cos(playerRot) * speed
+        newY += np.sin(playerRot) * speed
 
     if keys[pygame.K_s]:
-        playerX -= forwardX * speed
-        playerY -= forwardY * speed
+        newX -= np.cos(playerRot) * speed
+        newY -= np.sin(playerRot) * speed
 
     if keys[pygame.K_a]:
-        playerX -= np.sin(playerRot) * speed
-        playerY += np.cos(playerRot) * speed
+        newX -= np.sin(playerRot) * speed
+        newY += np.cos(playerRot) * speed
 
     if keys[pygame.K_d]:
-        playerX += np.sin(playerRot) * speed
-        playerY -= np.cos(playerRot) * speed
+        newX += np.sin(playerRot) * speed
+        newY -= np.cos(playerRot) * speed
+
+    # Move on the X-axis if possible
+    if can_move(newX, playerY) and not collides_with_box(newX, playerY, playerZ):
+        playerX = newX
+
+    # Move on the Y-axis if possible
+    if can_move(playerX, newY) and not collides_with_box(playerX, newY, playerZ):
+        playerY = newY
 
     # -------------------------
     # Jump
     # -------------------------
-    if keys[pygame.K_SPACE] and playerZ <= groundHeight + 0.001:
+    floor = get_floor_height(playerX, playerY)
+
+    if keys[pygame.K_SPACE] and abs(playerZ - floor) < 0.01:
         verticalVelocity = jumpStrength
 
     verticalVelocity += gravity
     playerZ += verticalVelocity
 
-    if playerZ < groundHeight:
-        playerZ = groundHeight
+    floor = get_floor_height(playerX, playerY)
+
+    if playerZ <= floor:
+        playerZ = floor
         verticalVelocity = 0
 
     # -------------------------
@@ -292,8 +438,10 @@ while running:
         playerX, playerY, playerZ,
         0, 0, 1
     )
-
+    # Calling methods
+    draw_map()
     draw_floor()
+    draw_boxes()
     draw_player()
 
     pygame.display.flip()
