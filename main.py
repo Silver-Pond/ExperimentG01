@@ -76,6 +76,16 @@ boxes = [
     {"x": 4.5, "y": 3.5, "size": 1.0, "height": 1.0}
 ]
 
+# ----------------------------
+# Flowers
+# ----------------------------
+flowers = [
+    {"x": 6.5, "y": 5.5, "size": 0.5, "height": 0.5},
+    {"x": 8.5, "y": 10.5, "size": 0.5, "height": 0.5},
+    {"x": -7.5, "y": 3.5, "size": 0.5, "height": 0.5},
+    {"x": 3.5, "y": 20.5, "size": 0.5, "height": 0.5}
+]
+
 # --------------------
 # Textures
 # --------------------
@@ -112,6 +122,7 @@ def load_texture(filename):
 grassTexture = load_texture("grass.png")
 wallTexture = load_texture("wall.png")
 boxTexture = load_texture("box.png")
+flowerTexture = load_texture("flower.png")
 
 # ----------------------------
 # Draw Map
@@ -171,16 +182,58 @@ def draw_boxes():
 
         glPushMatrix()
 
-        glTranslatef(
-            box["x"],
-            box["y"],
-            box["height"] / 2
-        )
+        glTranslatef(box["x"], box["y"], box["height"] / 2)
 
-        draw_textured_cube(
-            box["size"],
-            boxTexture
-        )
+        draw_textured_cube(box["size"], boxTexture)
+
+        glPopMatrix()
+
+# ----------------------------
+# Draw Flowers
+# ----------------------------
+def draw_flower():
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, flowerTexture)
+
+    glColor3f(1, 1, 1)
+
+    # Draw three crossed planes
+    for angle in (0, 60, 120, 180):
+
+        glPushMatrix()
+
+        glRotatef(angle, 0, 0, 1)
+
+        glBegin(GL_QUADS)
+
+        glTexCoord2f(0, 0)
+        glVertex3f(-0.25, 0, 0)
+
+        glTexCoord2f(1, 0)
+        glVertex3f(0.25, 0, 0)
+
+        glTexCoord2f(1, 1)
+        glVertex3f(0.25, 0, 0.6)
+
+        glTexCoord2f(0, 1)
+        glVertex3f(-0.25, 0, 0.6)
+
+        glEnd()
+
+        glPopMatrix()
+
+    glDisable(GL_TEXTURE_2D)
+
+def draw_flowers():
+
+    for flower in flowers:
+
+        glPushMatrix()
+
+        glTranslatef(flower["x"], flower["y"], flower["height"] / 2)
+
+        draw_flower()
 
         glPopMatrix()
 
@@ -513,9 +566,10 @@ while running:
         0, 0, 1
     )
     # Calling methods
-    draw_map()
     draw_floor()
+    draw_map()
     draw_boxes()
+    draw_flowers()
     draw_player()
 
     pygame.display.flip()
