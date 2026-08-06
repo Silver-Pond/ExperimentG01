@@ -66,7 +66,7 @@ mapA = [
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1]
 ]
 
 # ----------------------------
@@ -110,6 +110,7 @@ def load_texture(filename):
     return texture
 
 grassTexture = load_texture("grass.png")
+wallTexture = load_texture("wall.png")
 boxTexture = load_texture("box.png")
 
 # ----------------------------
@@ -121,14 +122,14 @@ def draw_map():
         for y in range(len(mapA[x])):
 
             if mapA[x][y] == 1:
+                for level in range(WALL_HEIGHT):
+                    glPushMatrix()
 
-                glPushMatrix()
+                    glTranslatef(x + 0.5, y + 0.5, level + 0.5)
 
-                glTranslatef(x + 0.5, y + 0.5, 0.5)
+                    draw_textured_cube(1, wallTexture)
 
-                draw_textured_cube(1, grassTexture)
-
-                glPopMatrix()
+                    glPopMatrix()
 
 # ----------------------------
 # Draw Floor
@@ -251,18 +252,19 @@ playerZ = 0.3
 # cam and player rotation
 cameraRot = 0.0
 playerRot = 0.0
-cameraDistance = 4.0
-cameraHeight = 1.0
+CAMERA_DISTANCE = 4.0
 
 # Game variables
 verticalVelocity = 0.0
-gravity = -0.015
+GRAVITY = -0.025
 jumpStrength = 0.25
 playerRadius = 0.25
+walkAngle = 0.0
 
 # Heights
-groundHeight = 0.3
-stepHeight = 0.45
+GROUND_HEIGHT = 0.3
+CAMERA_HEIGHT = 1.0
+WALL_HEIGHT = 3
 
 # ----------------------------
 # Draw Player
@@ -271,11 +273,73 @@ def draw_player():
 
     glPushMatrix()
 
+    # Move to player position
     glTranslatef(playerX, playerY, playerZ)
 
-    glColor3f(1, 0, 0)
+    # Rotate player to face movement direction
+    glRotatef(np.degrees(playerRot) - 90, 0, 0, 1)
 
-    draw_textured_cube(0.5, 0)
+    swing = np.sin(walkAngle) * 50
+
+    glColor3f(1, 1, 1)
+
+    # -------------------
+    # Body
+    # -------------------
+    glPushMatrix()
+    glTranslatef(0, 0, 0.35)
+    glScalef(0.45, 0.25, 0.45)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
+
+    # -------------------
+    # Head
+    # -------------------
+    glPushMatrix()
+    glTranslatef(0, 0, 0.75)
+    glScalef(0.30, 0.30, 0.25)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
+
+    # -------------------
+    # Left Arm
+    # -------------------
+    glPushMatrix()
+    glTranslatef(-0.32, 0, 0.36)
+    glRotatef(swing, 1, 0, 0)
+    glScalef(0.12, 0.12, 0.40)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
+
+    # -------------------
+    # Right Arm
+    # -------------------
+    glPushMatrix()
+    glTranslatef(0.32, 0, 0.36)
+    glRotatef(-swing, 1, 0, 0)
+    glScalef(0.12, 0.12, 0.40)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
+
+    # -------------------
+    # Left Leg
+    # -------------------
+    glPushMatrix()
+    glTranslatef(-0.12, 0, -0.05)
+    glRotatef(-swing, 1, 0, 0)
+    glScalef(0.14, 0.14, 0.25)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
+
+    # -------------------
+    # Right Leg
+    # -------------------
+    glPushMatrix()
+    glTranslatef(0.12, 0, -0.05)
+    glRotatef(swing, 1, 0, 0)
+    glScalef(0.14, 0.14, 0.25)
+    draw_textured_cube(1, 0)
+    glPopMatrix()
 
     glPopMatrix()
 
@@ -285,10 +349,10 @@ def draw_player():
 def can_move(x, y):
 
     checks = [
-        (x-playerRadius, y),
-        (x+playerRadius, y),
-        (x, y-playerRadius),
-        (x, y+playerRadius)
+        (x - playerRadius, y),
+        (x + playerRadius, y),
+        (x, y - playerRadius),
+        (x, y + playerRadius)
     ]
 
     for cx, cy in checks:
@@ -303,7 +367,7 @@ def can_move(x, y):
 # ----------------------------
 def get_floor_height(x, y):
 
-    floor = groundHeight
+    floor = GROUND_HEIGHT
 
     for box in boxes:
 
@@ -354,7 +418,7 @@ while running:
 
     keys = pygame.key.get_pressed()
 
-    speed = 0.1
+    speed = 0.2
 
     # -------------------------
     # Mouse look
@@ -369,31 +433,41 @@ while running:
     # -------------------------
     # Camera follows player
     # -------------------------
-    camX = playerX - np.cos(cameraRot) * cameraDistance
-    camY = playerY - np.sin(cameraRot) * cameraDistance
-    camZ = cameraHeight + playerZ
+    camX = playerX - np.cos(cameraRot) * CAMERA_DISTANCE
+    camY = playerY - np.sin(cameraRot) * CAMERA_DISTANCE
+    camZ = CAMERA_HEIGHT + playerZ
 
     # -------------------------
     # Keyboard movement
     # -------------------------
     newX = playerX
     newY = playerY
+    moving = False
 
     if keys[pygame.K_w]:
         newX += np.cos(playerRot) * speed
         newY += np.sin(playerRot) * speed
+        moving = True
 
     if keys[pygame.K_s]:
         newX -= np.cos(playerRot) * speed
         newY -= np.sin(playerRot) * speed
+        moving = True
 
     if keys[pygame.K_a]:
         newX -= np.sin(playerRot) * speed
         newY += np.cos(playerRot) * speed
+        moving = True
 
     if keys[pygame.K_d]:
         newX += np.sin(playerRot) * speed
         newY -= np.cos(playerRot) * speed
+        moving = True
+
+    if moving:
+        walkAngle += 0.5
+    else:
+        walkAngle *= 0.11  # Smoothly return to standing
 
     # Move on the X-axis if possible
     if can_move(newX, playerY) and not collides_with_box(newX, playerY, playerZ):
@@ -411,7 +485,7 @@ while running:
     if keys[pygame.K_SPACE] and abs(playerZ - floor) < 0.01:
         verticalVelocity = jumpStrength
 
-    verticalVelocity += gravity
+    verticalVelocity += GRAVITY
     playerZ += verticalVelocity
 
     floor = get_floor_height(playerX, playerY)
