@@ -81,9 +81,21 @@ boxes = [
 # ----------------------------
 flowers = [
     {"x": 6.5, "y": 5.5, "size": 0.5, "height": 0.5},
-    {"x": 8.5, "y": 10.5, "size": 0.5, "height": 0.5},
-    {"x": -7.5, "y": 3.5, "size": 0.5, "height": 0.5},
-    {"x": 3.5, "y": 20.5, "size": 0.5, "height": 0.5}
+    {"x": 8.5, "y": 4.5, "size": 0.5, "height": 0.5},
+    {"x": 7.5, "y": 3.5, "size": 0.5, "height": 0.5},
+    {"x": 3.5, "y": 2.5, "size": 0.5, "height": 0.5},
+    {"x": 3.5, "y": 6.5, "size": 0.5, "height": 0.5},
+    {"x": 3.5, "y": 9.5, "size": 0.5, "height": 0.5},
+    {"x": 5.5, "y": 9.5, "size": 0.5, "height": 0.5},
+    {"x": 4.5, "y": 10.5, "size": 0.5, "height": 0.5},
+    {"x": 6.5, "y": 10.5, "size": 0.5, "height": 0.5},
+    {"x": 8.5, "y": 8.5, "size": 0.5, "height": 0.5},
+    {"x": 6.5, "y": 12.5, "size": 0.5, "height": 0.5},
+    {"x": 7.5, "y": 10.5, "size": 0.5, "height": 0.5},
+    {"x": 9.5, "y": 11.5, "size": 0.5, "height": 0.5},
+    {"x": 10.5, "y": 16.5, "size": 0.5, "height": 0.5},
+    {"x": 10.5, "y": 12.5, "size": 0.5, "height": 0.5},
+    {"x": 9.5, "y": 14.5, "size": 0.5, "height": 0.5}
 ]
 
 # --------------------
@@ -148,6 +160,7 @@ def draw_map():
 def draw_floor():
 
     glEnable(GL_TEXTURE_2D)
+    glEnable(GL_LIGHTING)
     glBindTexture(GL_TEXTURE_2D, grassTexture)
 
     glColor3f(1, 1, 1)
@@ -480,9 +493,6 @@ while running:
 
     cameraRot -= mouseX * mouseSensitivity
 
-    # Make the player always face the camera direction
-    playerRot = cameraRot
-
     # -------------------------
     # Camera follows player
     # -------------------------
@@ -519,6 +529,8 @@ while running:
 
     if moving:
         walkAngle += 0.5
+        # Make the player always face the camera direction
+        playerRot = cameraRot
     else:
         walkAngle *= 0.11  # Smoothly return to standing
 
