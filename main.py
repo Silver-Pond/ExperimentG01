@@ -218,16 +218,8 @@ def draw_boxes():
 # Draw Coins
 # ----------------------------
 quadric = gluNewQuadric()
-
-gluQuadricNormals(
-    quadric,
-    GLU_SMOOTH
-)
-
-gluQuadricTexture(
-    quadric,
-    GL_TRUE
-)
+gluQuadricNormals(quadric, GLU_SMOOTH)
+gluQuadricTexture(quadric, GL_TRUE)
 
 def draw_coins():
 
@@ -251,36 +243,20 @@ def draw_coins():
         glRotatef(90, 1, 0, 0)
 
         # Spin around its vertical axis
-        glRotatef(
-            coinRotation,
-            0, 1, 0
-        )
+        glRotatef(coinRotation, 0, 1, 0)
 
         # Center the coin
         glTranslatef(0, 0, -0.03)
 
         # Coin cylinder
-        gluCylinder(
-            quadric,
-            0.18,
-            0.18,
-            0.06,
-            32,
-            4
-        )
+        gluCylinder(quadric, 0.18, 0.18, 0.06, 32, 4)
 
         # Front
         glPushMatrix()
 
         glTranslatef(0, 0, 0.06)
 
-        gluDisk(
-            quadric,
-            0,
-            0.18,
-            32,
-            1
-        )
+        gluDisk(quadric, 0, 0.18, 32, 1)
 
         glPopMatrix()
 
@@ -289,13 +265,7 @@ def draw_coins():
 
         glRotatef(180, 1, 0, 0)
 
-        gluDisk(
-            quadric,
-            0,
-            0.18,
-            32,
-            1
-        )
+        gluDisk(quadric, 0, 0.18, 32, 1)
 
         glPopMatrix()
 
@@ -304,7 +274,7 @@ def draw_coins():
     glDisable(GL_TEXTURE_2D)
 
 # ----------------------------
-# Collect Coins
+# Coin Collection
 # ----------------------------
 def collect_coins():
 
@@ -317,17 +287,12 @@ def collect_coins():
         distanceX = playerX - coin["x"]
         distanceY = playerY - coin["y"]
 
-        distance = np.sqrt(
-            distanceX ** 2 +
-            distanceY ** 2
-        )
+        distance = np.sqrt(distanceX ** 2 + distanceY ** 2)
 
         if distance < COIN_COLLECT_DISTANCE:
-
             coinsCollected += 1
 
         else:
-
             remainingCoins.append(coin)
 
     coins[:] = remainingCoins
@@ -463,7 +428,7 @@ coinsCollected = 0
 
 # Heights
 GROUND_HEIGHT = 0.3
-CAMERA_HEIGHT = 1.6
+CAMERA_HEIGHT = 1.0
 WALL_HEIGHT = 3
 
 # ----------------------------
@@ -723,14 +688,15 @@ while running:
         playerX, playerY, playerZ,
         0, 0, 1
     )
-    # -------------------------
-    # 3D WORLD
-    # -------------------------
-    draw_map()
+    # Calling methods
     draw_floor()
+    draw_map()
+    draw_boxes()
     draw_flowers()
     draw_coins()
     draw_player()
+
+    pygame.display.flip()
 
     clock.tick(60)
 
