@@ -1,13 +1,14 @@
 import sys
 
 import pygame
+from OpenGL.raw.GLU import gluQuadricTexture, gluQuadricNormals, GLU_SMOOTH, gluCylinder, gluDisk
 
 sys.path.append("pyggel")
 
 import pyggel
 import numpy as np
 from OpenGL.GL import *
-from OpenGL.GLU import gluLookAt
+from OpenGL.GLU import gluLookAt, gluNewQuadric
 from OpenGL.GLU import gluPerspective
 
 # ----------------------------
@@ -98,6 +99,17 @@ flowers = [
     {"x": 9.5, "y": 14.5, "size": 0.5, "height": 0.5}
 ]
 
+# ----------------------------
+# Coins
+# ----------------------------
+coins = [
+    {"x": 12.5, "y": 7.5, "z": 0.5},
+    {"x": 14.5, "y": 7.5, "z": 0.5},
+    {"x": 16.5, "y": 7.5, "z": 0.5},
+    {"x": 18.5, "y": 7.5, "z": 0.5},
+    {"x": 20.5, "y": 7.5, "z": 0.5}
+]
+
 # --------------------
 # Textures
 # --------------------
@@ -135,6 +147,7 @@ grassTexture = load_texture("grass.png")
 wallTexture = load_texture("wall.png")
 boxTexture = load_texture("box.png")
 flowerTexture = load_texture("flower.png")
+coinTexture = load_texture("coin.png")
 
 # ----------------------------
 # Draw Map
@@ -200,6 +213,127 @@ def draw_boxes():
         draw_textured_cube(box["size"], boxTexture)
 
         glPopMatrix()
+
+# ----------------------------
+# Draw Coins
+# ----------------------------
+quadric = gluNewQuadric()
+
+gluQuadricNormals(
+    quadric,
+    GLU_SMOOTH
+)
+
+gluQuadricTexture(
+    quadric,
+    GL_TRUE
+)
+
+def draw_coin():
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, coinTexture)
+
+    # Coin thickness and radius
+    radius = 0.18
+    thickness = 0.06
+
+    # Draw the coin
+    gluCylinder(quadric, radius, radius, thickness, 32, 4)
+
+    # Front face
+    glPushMatrix()
+
+    glTranslatef(0, 0, thickness)
+
+    gluDisk(quadric, 0, radius, 32, 1)
+
+    glPopMatrix()
+
+    # Back face
+    glPushMatrix()
+
+    glRotatef(180, 1, 0, 0)
+
+    gluDisk(quadric, 0, radius, 32, 1)
+
+    glPopMatrix()
+
+    glDisable(GL_TEXTURE_2D)
+
+def draw_coins():
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, coinTexture)
+
+    glColor3f(1.0, 1.0, 1.0)
+
+    for coin in coins:
+
+        glPushMatrix()
+
+        # Position
+        glTranslatef(
+            coin["x"],
+            coin["y"],
+            coin["z"]
+        )
+
+        # Make coin upright
+        glRotatef(90, 1, 0, 0)
+
+        # Spin around its vertical axis
+        glRotatef(
+            coinRotation,
+            0, 1, 0
+        )
+
+        # Center the coin
+        glTranslatef(0, 0, -0.03)
+
+        # Coin cylinder
+        gluCylinder(
+            quadric,
+            0.18,
+            0.18,
+            0.06,
+            32,
+            4
+        )
+
+        # Front
+        glPushMatrix()
+
+        glTranslatef(0, 0, 0.06)
+
+        gluDisk(
+            quadric,
+            0,
+            0.18,
+            32,
+            1
+        )
+
+        glPopMatrix()
+
+        # Back
+        glPushMatrix()
+
+        glRotatef(180, 1, 0, 0)
+
+        gluDisk(
+            quadric,
+            0,
+            0.18,
+            32,
+            1
+        )
+
+        glPopMatrix()
+
+        glPopMatrix()
+
+    glDisable(GL_TEXTURE_2D)
 
 # ----------------------------
 # Draw Flowers
@@ -326,6 +460,7 @@ GRAVITY = -0.025
 jumpStrength = 0.25
 playerRadius = 0.25
 walkAngle = 0.0
+coinRotation = 0.0
 
 # Heights
 GROUND_HEIGHT = 0.3
@@ -484,7 +619,14 @@ while running:
 
     keys = pygame.key.get_pressed()
 
+    # Player speed
     speed = 0.2
+
+    # Coin rotation
+    coinRotation += 3.0
+
+    if coinRotation >= 360:
+        coinRotation -= 360
 
     # -------------------------
     # Mouse look
@@ -582,6 +724,7 @@ while running:
     draw_map()
     draw_boxes()
     draw_flowers()
+    draw_coins()
     draw_player()
 
     pygame.display.flip()
