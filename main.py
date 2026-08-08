@@ -229,38 +229,6 @@ gluQuadricTexture(
     GL_TRUE
 )
 
-def draw_coin():
-
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, coinTexture)
-
-    # Coin thickness and radius
-    radius = 0.18
-    thickness = 0.06
-
-    # Draw the coin
-    gluCylinder(quadric, radius, radius, thickness, 32, 4)
-
-    # Front face
-    glPushMatrix()
-
-    glTranslatef(0, 0, thickness)
-
-    gluDisk(quadric, 0, radius, 32, 1)
-
-    glPopMatrix()
-
-    # Back face
-    glPushMatrix()
-
-    glRotatef(180, 1, 0, 0)
-
-    gluDisk(quadric, 0, radius, 32, 1)
-
-    glPopMatrix()
-
-    glDisable(GL_TEXTURE_2D)
-
 def draw_coins():
 
     glEnable(GL_TEXTURE_2D)
@@ -334,6 +302,35 @@ def draw_coins():
         glPopMatrix()
 
     glDisable(GL_TEXTURE_2D)
+
+# ----------------------------
+# Collect Coins
+# ----------------------------
+def collect_coins():
+
+    global coinsCollected
+
+    remainingCoins = []
+
+    for coin in coins:
+
+        distanceX = playerX - coin["x"]
+        distanceY = playerY - coin["y"]
+
+        distance = np.sqrt(
+            distanceX ** 2 +
+            distanceY ** 2
+        )
+
+        if distance < COIN_COLLECT_DISTANCE:
+
+            coinsCollected += 1
+
+        else:
+
+            remainingCoins.append(coin)
+
+    coins[:] = remainingCoins
 
 # ----------------------------
 # Draw Flowers
@@ -461,10 +458,12 @@ jumpStrength = 0.25
 playerRadius = 0.25
 walkAngle = 0.0
 coinRotation = 0.0
+COIN_COLLECT_DISTANCE = 0.6
+coinsCollected = 0
 
 # Heights
 GROUND_HEIGHT = 0.3
-CAMERA_HEIGHT = 1.0
+CAMERA_HEIGHT = 1.6
 WALL_HEIGHT = 3
 
 # ----------------------------
@@ -702,6 +701,11 @@ while running:
         verticalVelocity = 0
 
     # -------------------------
+    # Collect coins
+    # -------------------------
+    collect_coins()
+
+    # -------------------------
     # Exit
     # -------------------------
     if keys[pygame.K_ESCAPE]:
@@ -719,15 +723,14 @@ while running:
         playerX, playerY, playerZ,
         0, 0, 1
     )
-    # Calling methods
-    draw_floor()
+    # -------------------------
+    # 3D WORLD
+    # -------------------------
     draw_map()
-    draw_boxes()
+    draw_floor()
     draw_flowers()
     draw_coins()
     draw_player()
-
-    pygame.display.flip()
 
     clock.tick(60)
 
